@@ -303,17 +303,17 @@
         </div>
       </div>
       <div class="form-section">
-        <div class="section-title">Categorías de Trabajo</div>
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">Categorías de Trabajo<button type="button" id="btn-all-cats" onclick="toggleAllCats()" style="font-size:11px;padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;background:var(--off);cursor:pointer;font-weight:500;">Seleccionar todas</button></div>
         <div class="checkbox-grid" id="cats-check">
-          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="Eventos">Eventos</label>
-          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="Comerciales">Comerciales</label>
-          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="Pasarela">Pasarela</label>
-          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="Editorial">Editorial</label>
-          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="Digital / Redes">Digital / Redes</label>
-          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="Fotografía">Fotografía</label>
-          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="Activaciones">Activaciones</label>
-          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="Publicidad">Publicidad</label>
-          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="Moda">Moda</label>
+          <label class="check-item" onclick="toggleCheck(event, this)"><input type="checkbox" value="Eventos">Eventos</label>
+          <label class="check-item" onclick="toggleCheck(event, this)"><input type="checkbox" value="Comerciales">Comerciales</label>
+          <label class="check-item" onclick="toggleCheck(event, this)"><input type="checkbox" value="Pasarela">Pasarela</label>
+          <label class="check-item" onclick="toggleCheck(event, this)"><input type="checkbox" value="Editorial">Editorial</label>
+          <label class="check-item" onclick="toggleCheck(event, this)"><input type="checkbox" value="Digital / Redes">Digital / Redes</label>
+          <label class="check-item" onclick="toggleCheck(event, this)"><input type="checkbox" value="Fotografía">Fotografía</label>
+          <label class="check-item" onclick="toggleCheck(event, this)"><input type="checkbox" value="Activaciones">Activaciones</label>
+          <label class="check-item" onclick="toggleCheck(event, this)"><input type="checkbox" value="Publicidad">Publicidad</label>
+          <label class="check-item" onclick="toggleCheck(event, this)"><input type="checkbox" value="Moda">Moda</label>
         </div>
       </div>
       <div class="form-section">
@@ -411,9 +411,20 @@ function showView(v, btn) {
   if (v === 'search') { document.getElementById('results-info').textContent = ''; document.getElementById('results-grid').innerHTML = ''; }
 }
 
-function toggleCheck(el) {
+function toggleCheck(e, el) {
+  e.preventDefault();
   el.classList.toggle('checked');
   el.querySelector('input').checked = el.classList.contains('checked');
+}
+
+function toggleAllCats() {
+  const items = document.querySelectorAll('#cats-check .check-item');
+  const allChecked = Array.from(items).every(el => el.classList.contains('checked'));
+  items.forEach(el => {
+    if (allChecked) { el.classList.remove('checked'); el.querySelector('input').checked = false; }
+    else { el.classList.add('checked'); el.querySelector('input').checked = true; }
+  });
+  document.getElementById('btn-all-cats').textContent = allChecked ? 'Seleccionar todas' : 'Deseleccionar todas';
 }
 
 function handlePhotos(e) {
