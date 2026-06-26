@@ -230,7 +230,7 @@
   <nav>
     <button class="nav-btn active" onclick="showView('search',this)">🔍 Buscar</button>
     <button class="nav-btn" onclick="showView('register',this)">+ Registrar</button>
-    <button class="nav-btn" onclick="showView('list',this)">Todos los modelos</button>
+    <button class="nav-btn" onclick="showView('list',this)">Catálogo de Modelos</button>
   </nav>
 </header>
 
@@ -353,7 +353,7 @@
   <!-- LIST -->
   <div id="view-list" class="view">
     <div class="form-header">
-      <h2>Todos los Modelos</h2>
+      <h2>Catálogo de Modelos</h2>
       <p id="list-count">Cargando...</p>
     </div>
     <div class="list-filters">
@@ -482,14 +482,20 @@ async function registerModel() {
   };
 
   try {
-    await sbFetch('modelos', { method: 'POST', body: JSON.stringify(record) });
-    showToast('✅ ' + nombre + ' registrado correctamente');
+    if (editingId) {
+      await sbFetch('modelos?id=eq.' + editingId, { method: 'PATCH', body: JSON.stringify(record) });
+      showToast('✅ ' + nombre + ' actualizado correctamente');
+    } else {
+      await sbFetch('modelos', { method: 'POST', body: JSON.stringify(record) });
+      showToast('✅ ' + nombre + ' registrado correctamente');
+    }
     resetForm();
   } catch(e) {
     showToast('Error al guardar: ' + e.message, true);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = 'Registrar Modelo';
+    btn.innerHTML = editingId ? 'Guardar cambios' : 'Registrar Modelo';
+    editingId = null;
   }
 }
 
@@ -500,6 +506,9 @@ function resetForm() {
   document.querySelectorAll('.check-item.checked').forEach(el => { el.classList.remove('checked'); el.querySelector('input').checked = false; });
   document.getElementById('photo-preview').innerHTML = '';
   photoDataUrls = [];
+  editingId = null;
+  document.getElementById('btn-register').innerHTML = 'Registrar Modelo';
+  document.querySelector('#view-register .form-header h2').textContent = 'Registrar Modelo';
 }
 
 async function runSearch() {
@@ -537,6 +546,7 @@ async function runSearch() {
 }
 
 let allModelos = [];
+let editingId = null;
 
 async function loadAll() {
   document.getElementById('all-grid').innerHTML = '<div class="empty-state"><div class="ei">⏳</div><p>Cargando modelos...</p></div>';
@@ -605,9 +615,45 @@ async function openModal(id) {
         + (m.tiktok ? '<span class="tag">🎵 ' + m.tiktok + '</span>' : '')
         + (m.linkedin ? '<span class="tag">💼 ' + m.linkedin + '</span>' : '')
         + '</div></div>' : '')
-      + '<button class="btn-danger" onclick="deleteModel(\'' + m.id + '\')">Eliminar modelo</button>';
+      + '<div style="display:flex;gap:10px;margin-top:8px">'
+      + '<button class="btn-primary" onclick="editModel(\'' + m.id + '\')">✏️ Editar</button>'
+      + '<button class="btn-danger" onclick="deleteModel(\'' + m.id + '\')">Eliminar modelo</button>'
+      + '</div>';
     document.getElementById('modal').classList.add('open');
   } catch(e) { showToast('Error al cargar perfil', true); }
+}
+
+async function editModel(id) {
+  try {
+    const data = await sbFetch('modelos?id=eq.' + id);
+    const m = data[0];
+    editingId = id;
+    closeModal();
+    const set = (elId, val) => { const el = document.getElementById(elId); if (el && val != null) el.value = val; };
+    set('r-name', m.nombre); set('r-age', m.edad); set('r-city', m.ciudad);
+    set('r-phone', m.telefono); set('r-email', m.email); set('r-height', m.altura);
+    set('r-peso', m.peso); set('r-bust', m.busto); set('r-waist', m.cintura);
+    set('r-hips', m.cadera); set('r-shoe', m.calzado); set('r-notes', m.notas);
+    set('r-ig', m.instagram); set('r-tt', m.tiktok); set('r-li', m.linkedin);
+    set('r-notes', m.notas);
+    const setSelect = (elId, val) => { const el = document.getElementById(elId); if (!el || !val) return; for (let i = 0; i < el.options.length; i++) { if (el.options[i].text === val) { el.selectedIndex = i; break; } } };
+    setSelect('r-gender', m.genero); setSelect('r-skin', m.tez); setSelect('r-eyes', m.ojos);
+    setSelect('r-hair', m.cabello); setSelect('r-size', m.talla); setSelect('r-exp', m.experiencia);
+    setSelect('r-avail', m.disponibilidad);
+    document.querySelectorAll('#cats-check .check-item').forEach(el => {
+      const val = el.querySelector('input').value;
+      const active = m.categorias && m.categorias.includes(val);
+      el.classList.toggle('checked', active);
+      el.querySelector('input').checked = active;
+    });
+    photoDataUrls = m.fotos || [];
+    const preview = document.getElementById('photo-preview');
+    preview.innerHTML = '';
+    photoDataUrls.forEach(src => { const img = document.createElement('img'); img.src = src; preview.appendChild(img); });
+    document.getElementById('btn-register').innerHTML = 'Guardar cambios';
+    document.querySelector('#view-register .form-header h2').textContent = 'Editar Modelo';
+    showView('register', document.querySelector('.nav-btn:nth-child(2)'));
+  } catch(e) { showToast('Error al cargar modelo', true); }
 }
 
 async function deleteModel(id) {
