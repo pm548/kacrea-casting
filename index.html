@@ -194,8 +194,13 @@
   .modal-close { background: var(--off); border: none; color: var(--dark); font-size: 16px; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background .15s; }
   .modal-close:hover { background: var(--light); }
   .modal-body { padding: 22px 26px; }
-  .modal-photos { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-  .modal-photos img { height: 150px; object-fit: cover; border-radius: 8px; flex: 1; min-width: 100px; border: 1px solid var(--border); }
+  .list-filters { display: flex; gap: 10px; margin: 0 0 18px 0; }
+  .list-filters input { flex: 1; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--white); color: var(--dark); outline: none; }
+  .list-filters input:focus { border-color: var(--accent); }
+  .list-filters select { padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--white); color: var(--dark); outline: none; cursor: pointer; }
+  .list-filters select:focus { border-color: var(--accent); }
+  .modal-photos { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .modal-photos img { width: 100%; max-height: 380px; object-fit: contain; border-radius: 10px; border: 1px solid var(--border); background: var(--off); }
   .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
   .detail-item label { font-size: 10px; color: var(--soft); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 2px; font-weight: 600; }
   .detail-item span { font-size: 13px; font-weight: 500; }
@@ -240,11 +245,11 @@
     <div class="filter-box">
       <div><span class="flabel">Nombre</span><input type="text" id="f-name" placeholder="Nombre..."></div>
       <div><span class="flabel">Género</span>
-        <select id="f-gender"><option value="">Todos</option><option>Femenino</option><option>Masculino</option><option>No binario</option></select></div>
+        <select id="f-gender"><option value="">Todos</option><option>Femenino</option><option>Masculino</option></select></div>
       <div><span class="flabel">Edad (rango)</span>
         <div class="range-row"><input type="number" id="f-amin" placeholder="Min"><span>–</span><input type="number" id="f-amax" placeholder="Máx"></div></div>
       <div><span class="flabel">Tez / Piel</span>
-        <select id="f-skin"><option value="">Todas</option><option>Blanca</option><option>Morena clara</option><option>Morena</option><option>Morena oscura</option><option>Negra</option><option>Trigueña</option></select></div>
+        <select id="f-skin"><option value="">Todas</option><option>Blanca</option><option>Morena clara</option><option>Morena</option><option>Morena oscura</option><option>Trigueña</option></select></div>
       <div><span class="flabel">Altura cm (rango)</span>
         <div class="range-row"><input type="number" id="f-hmin" placeholder="Min"><span>–</span><input type="number" id="f-hmax" placeholder="Máx"></div></div>
       <div><span class="flabel">Categoría</span>
@@ -270,7 +275,7 @@
           <div class="form-group"><label>Nombre completo *</label><input type="text" id="r-name" placeholder="Nombre y apellido"></div>
           <div class="form-group"><label>Edad *</label><input type="number" id="r-age" min="16" max="80" placeholder="24"></div>
           <div class="form-group"><label>Género *</label>
-            <select id="r-gender"><option value="">Seleccionar...</option><option>Femenino</option><option>Masculino</option><option>No binario</option></select></div>
+            <select id="r-gender"><option value="">Seleccionar...</option><option>Femenino</option><option>Masculino</option></select></div>
           <div class="form-group"><label>Ciudad</label><input type="text" id="r-city" placeholder="Maracaibo"></div>
           <div class="form-group"><label>Teléfono / WhatsApp</label><input type="text" id="r-phone" placeholder="+58..."></div>
           <div class="form-group"><label>Correo electrónico</label><input type="email" id="r-email" placeholder="modelo@email.com"></div>
@@ -280,7 +285,7 @@
         <div class="section-title">Características Físicas</div>
         <div class="form-row">
           <div class="form-group"><label>Tez / Piel *</label>
-            <select id="r-skin"><option value="">Seleccionar...</option><option>Blanca</option><option>Morena clara</option><option>Morena</option><option>Morena oscura</option><option>Negra</option><option>Trigueña</option></select></div>
+            <select id="r-skin"><option value="">Seleccionar...</option><option>Blanca</option><option>Morena clara</option><option>Morena</option><option>Morena oscura</option><option>Trigueña</option></select></div>
           <div class="form-group"><label>Altura (cm)</label><input type="number" id="r-height" placeholder="170"></div>
           <div class="form-group"><label>Peso (kg)</label><input type="number" id="r-weight" placeholder="60"></div>
           <div class="form-group"><label>Color de ojos</label>
@@ -351,6 +356,14 @@
       <h2>Todos los Modelos</h2>
       <p id="list-count">Cargando...</p>
     </div>
+    <div class="list-filters">
+      <input type="text" id="list-search" placeholder="Buscar por nombre..." oninput="filterList()">
+      <select id="list-gender" onchange="filterList()">
+        <option value="">Todos</option>
+        <option>Femenino</option>
+        <option>Masculino</option>
+      </select>
+    </div>
     <div class="models-grid" id="all-grid"></div>
   </div>
 
@@ -382,8 +395,10 @@ let currentModalId = null;
 
 async function sbFetch(path, opts = {}) {
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: HEADERS, ...opts });
-  if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Error'); }
-  return res.status === 204 ? null : res.json();
+  const text = await res.text();
+  if (!res.ok) { let msg = 'Error ' + res.status; try { msg = JSON.parse(text).message || msg; } catch(_) {} throw new Error(msg); }
+  if (!text) return null;
+  try { return JSON.parse(text); } catch(_) { return null; }
 }
 
 // VIEWS
@@ -510,15 +525,33 @@ async function runSearch() {
   }
 }
 
+let allModelos = [];
+
 async function loadAll() {
   document.getElementById('all-grid').innerHTML = '<div class="empty-state"><div class="ei">⏳</div><p>Cargando modelos...</p></div>';
   try {
-    const data = await sbFetch('modelos?select=*&order=nombre.asc');
-    document.getElementById('list-count').textContent = data.length + ' modelo' + (data.length !== 1 ? 's' : '') + ' registrado' + (data.length !== 1 ? 's' : '');
-    document.getElementById('all-grid').innerHTML = data.length ? data.map(modelCard).join('') : '<div class="empty-state"><div class="ei">👤</div><p>Aún no hay modelos registrados.<br>Ve a <strong>Registrar</strong> para empezar.</p></div>';
+    allModelos = await sbFetch('modelos?select=*&order=nombre.asc');
+    document.getElementById('list-search').value = '';
+    document.getElementById('list-gender').selectedIndex = 0;
+    renderList(allModelos);
   } catch(e) {
     document.getElementById('all-grid').innerHTML = '<div class="empty-state"><div class="ei">⚠️</div><p>Error al cargar: ' + e.message + '</p></div>';
   }
+}
+
+function filterList() {
+  const q = document.getElementById('list-search').value.toLowerCase();
+  const g = document.getElementById('list-gender').value;
+  const filtered = allModelos.filter(m =>
+    (!q || m.nombre.toLowerCase().includes(q)) &&
+    (!g || m.genero === g)
+  );
+  renderList(filtered);
+}
+
+function renderList(data) {
+  document.getElementById('list-count').textContent = data.length + ' modelo' + (data.length !== 1 ? 's' : '') + ' registrado' + (data.length !== 1 ? 's' : '');
+  document.getElementById('all-grid').innerHTML = data.length ? data.map(modelCard).join('') : '<div class="empty-state"><div class="ei">👤</div><p>Sin resultados.</p></div>';
 }
 
 function modelCard(m) {
