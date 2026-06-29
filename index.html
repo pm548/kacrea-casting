@@ -112,14 +112,9 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* LOGO LOADER */
-  .logo-loader { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 48px 0; }
-  .logo-loader img { width: 72px; height: 72px; object-fit: contain; animation: logoPulse 1.4s ease-in-out infinite; }
-  @keyframes logoPulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.08); opacity: .65; }
-  }
-  .logo-loader-text { display: flex; gap: 2px; }
-  .logo-loader-text span { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: 3px; color: var(--black); animation: letterWave 1.2s ease-in-out infinite; }
+  .logo-loader { display: flex; justify-content: center; align-items: center; padding: 80px 0; width: 100%; }
+  .logo-loader-text { display: flex; gap: 3px; }
+  .logo-loader-text span { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 4px; color: var(--black); animation: letterWave 1.2s ease-in-out infinite; }
   .logo-loader-text span:nth-child(1) { animation-delay: 0s; }
   .logo-loader-text span:nth-child(2) { animation-delay: .1s; }
   .logo-loader-text span:nth-child(3) { animation-delay: .2s; }
@@ -128,7 +123,7 @@
   .logo-loader-text span:nth-child(6) { animation-delay: .5s; }
   @keyframes letterWave {
     0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-6px); }
+    30% { transform: translateY(-8px); }
   }
 
   /* MODALS */
@@ -539,8 +534,7 @@ function resetForm() {
 
 // CATALOG
 async function loadAll() {
-  const logoSrc = document.getElementById('header-logo').src;
-  document.getElementById('all-grid').innerHTML = '<div class="logo-loader"><img src="' + logoSrc + '" alt="Cargando"><div class="logo-loader-text"><span>K</span><span>A</span><span>C</span><span>R</span><span>E</span><span>A</span></div></div>';
+  document.getElementById('all-grid').innerHTML = '<div class="logo-loader"><div class="logo-loader-text"><span>K</span><span>A</span><span>C</span><span>R</span><span>E</span><span>A</span></div></div>';
   try {
     allModelos = await sbFetch('modelos?select=*&order=nombre.asc');
     runFilter();
