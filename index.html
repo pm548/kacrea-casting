@@ -47,12 +47,19 @@
   .range-row { display: flex; gap: 5px; align-items: center; }
   .range-row input { flex: 1; }
   .range-row span { color: var(--mid); font-size: 12px; }
+  .filter-actions { grid-column: 1 / -1; display: flex; gap: 10px; }
   .btn-search {
-    grid-column: 1 / -1; background: var(--black); color: var(--white); border: none;
+    flex: 1; background: var(--black); color: var(--white); border: none;
     border-radius: 8px; padding: 11px; font-family: 'Inter', sans-serif;
     font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity .18s;
   }
   .btn-search:hover { opacity: .85; }
+  .btn-clear {
+    background: transparent; color: var(--dark); border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 11px 18px; font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: all .18s; white-space: nowrap; display: none;
+  }
+  .btn-clear:hover { border-color: var(--black); color: var(--black); }
 
   .results-info { font-size: 13px; color: var(--soft); margin-bottom: 18px; }
   .results-info b { color: var(--black); }
@@ -216,7 +223,21 @@
         <option>No disponible</option>
       </select>
     </div>
-    <button class="btn-search" onclick="runFilter()">Buscar</button>
+    <div>
+      <span class="flabel">Ciudad</span>
+      <input type="text" id="f-city" placeholder="Maracaibo...">
+    </div>
+    <div>
+      <span class="flabel">Ordenar por</span>
+      <select id="f-sort">
+        <option value="nombre">Nombre A–Z</option>
+        <option value="recientes">Más recientes</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="btn-search" onclick="runFilter()">Buscar</button>
+      <button class="btn-clear" id="btn-clear" onclick="clearFilters()">✕ Limpiar filtros</button>
+    </div>
   </div>
 
   <p class="results-info" id="results-info"></p>
@@ -516,8 +537,13 @@ function runFilter() {
   const hmax = parseInt(document.getElementById('f-hmax').value) || null;
   const cat = document.getElementById('f-cat').value;
   const avail = document.getElementById('f-avail').value;
+  const city = document.getElementById('f-city').value.toLowerCase().trim();
+  const sort = document.getElementById('f-sort').value;
 
-  const filtered = allModelos.filter(m =>
+  const anyActive = name || gender || amin || amax || skin || hmin || hmax || cat || avail || city || sort === 'recientes';
+  document.getElementById('btn-clear').style.display = anyActive ? 'block' : 'none';
+
+  let filtered = allModelos.filter(m =>
     (!name || m.nombre.toLowerCase().includes(name)) &&
     (!gender || m.genero === gender) &&
     (!amin || (m.edad && m.edad >= amin)) &&
@@ -526,14 +552,27 @@ function runFilter() {
     (!hmin || (m.altura && m.altura >= hmin)) &&
     (!hmax || (m.altura && m.altura <= hmax)) &&
     (!cat || (m.categorias && m.categorias.includes(cat))) &&
-    (!avail || m.disponibilidad === avail)
+    (!avail || m.disponibilidad === avail) &&
+    (!city || (m.ciudad && m.ciudad.toLowerCase().includes(city)))
   );
+
+  if (sort === 'recientes') {
+    filtered = filtered.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }
 
   document.getElementById('results-info').innerHTML = 'Se encontraron <b>' + filtered.length + '</b> modelo' + (filtered.length !== 1 ? 's' : '');
   document.getElementById('list-count').textContent = allModelos.length + ' modelo' + (allModelos.length !== 1 ? 's' : '') + ' registrado' + (allModelos.length !== 1 ? 's' : '');
   document.getElementById('all-grid').innerHTML = filtered.length
     ? filtered.map(modelCard).join('')
     : '<div class="empty-state"><div class="ei">🔍</div><p>Ningún modelo coincide con los filtros.<br>Intenta con criterios más amplios.</p></div>';
+}
+
+function clearFilters() {
+  ['f-name','f-amin','f-amax','f-hmin','f-hmax','f-city'].forEach(id => document.getElementById(id).value = '');
+  ['f-gender','f-skin','f-cat','f-avail'].forEach(id => document.getElementById(id).selectedIndex = 0);
+  document.getElementById('f-sort').selectedIndex = 0;
+  document.getElementById('btn-clear').style.display = 'none';
+  runFilter();
 }
 
 function modelCard(m) {
