@@ -230,7 +230,8 @@
     <div>
       <span class="flabel">Ordenar por</span>
       <select id="f-sort">
-        <option value="nombre">Nombre A–Z</option>
+        <option value="asc">Ascendente (A–Z)</option>
+        <option value="desc">Descendente (Z–A)</option>
         <option value="recientes">Más recientes</option>
       </select>
     </div>
@@ -540,7 +541,7 @@ function runFilter() {
   const city = document.getElementById('f-city').value.toLowerCase().trim();
   const sort = document.getElementById('f-sort').value;
 
-  const anyActive = name || gender || amin || amax || skin || hmin || hmax || cat || avail || city || sort === 'recientes';
+  const anyActive = name || gender || amin || amax || skin || hmin || hmax || cat || avail || city || sort !== 'asc';
   document.getElementById('btn-clear').style.display = anyActive ? 'block' : 'none';
 
   let filtered = allModelos.filter(m =>
@@ -558,6 +559,10 @@ function runFilter() {
 
   if (sort === 'recientes') {
     filtered = filtered.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  } else if (sort === 'desc') {
+    filtered = filtered.slice().sort((a, b) => b.nombre.localeCompare(a.nombre));
+  } else {
+    filtered = filtered.slice().sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
   document.getElementById('results-info').innerHTML = 'Se encontraron <b>' + filtered.length + '</b> modelo' + (filtered.length !== 1 ? 's' : '');
